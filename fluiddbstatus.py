@@ -71,13 +71,17 @@ class  FluidDBConnection(object):
         return (False, 'Wrong thing happends on %s instance' % self.shortname)
 
 
-maininstance = FluidDBConnection('main', 'http://fluiddb.fluidinfo.com')
-sandbox = FluidDBConnection('sandbox', 'http://sandbox.fluidinfo.com')
+maininstance_http = FluidDBConnection('main (http)', 'http://fluiddb.fluidinfo.com')
+maininstance_https = FluidDBConnection('main (https)', 'https://fluiddb.fluidinfo.com')
+sandbox_http = FluidDBConnection('sandbox (http)', 'http://sandbox.fluidinfo.com')
+sandbox_https = FluidDBConnection('sandbox (https)', 'http://sandbox.fluidinfo.com')
 
 
 tests = [
-    ('Test FluidDB user', maininstance.test_user, 'FluidDB user on main has changed id'),
-    ('Test FluidDB Sandbox user', sandbox.test_user, 'FluidDB user on sandbox has changed id'),
+    ('Test FluidDB user (http)', maininstance_http.test_user, 'FluidDB user on main has changed id'),
+    ('Test FluidDB user (https)', maininstance_https.test_user, 'FluidDB user on main has changed id'),
+    ('Test FluidDB Sandbox user (http)', sandbox_http.test_user, 'FluidDB user on sandbox has changed id'),
+    ('Test FluidDB Sandbox user (https)', sandbox_https.test_user, 'FluidDB user on sandbox has changed id'),
         ]
 
 def main():
