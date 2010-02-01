@@ -12,11 +12,11 @@ import twitter
 def get_site_status(url):
     response = get_response(url)
     try:
-        if getattr(response, 'status') in (200, 302):
+        if response.status in (200, 302):
             return 'up'
     except AttributeError:
         pass
-    loggin.error('DOWN: %s status: %s', url, getattr(response, 'status'))
+    loggin.error('DOWN: %s status: %s', url, response.status)
     return 'down'
 
 def get_response(url):
@@ -48,9 +48,7 @@ def store_results(file_path, data):
 
 def is_internet_reachable():
     '''Checks if Google is down'''
-    if get_site_status('www.google.com') == 'down':
-        return False
-    return True
+    return get_site_status('www.google.com') == 'up'
 
 def test_fluiddb_user():
     '''Checks if fluiddb user exists'''
