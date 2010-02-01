@@ -50,36 +50,35 @@ def is_internet_reachable():
     '''Checks if Google is down'''
     return get_site_status('www.google.com') == 'up'
 
-def test_fluiddb_user():
-    '''Checks if fluiddb user exists'''
-    fdb = Fluid()
-    try:
-        ret = fdb.__call__('GET', '/users/fluiddb')
-        if ret[0] == 200:
-            return (True, 'Main instance is now reachable', ret[1]['id'])
-    except socket.error:
-        return (False, 'Main instance is unreachable')
-    except:
-        pass
-    return (False, 'Wrong thing happends on main instance')
+class  FluidDBConnection(object):
+    def __init__(self, shortname, url):
+        self.shortname = shortname
+        self.url = url
 
-def test_fluiddb_sandbox_user():
-    '''Checks if fluiddb user exists'''
-    fdb = Fluid('http://sandbox.fluidinfo.com')
-    try:
-        ret = fdb.__call__('GET', '/users/fluiddb')
-        if ret[0] == 200:
-            return (True, 'Sandbox instance is now reachable', ret[1]['id'])
-    except socket.error:
-        return (False, 'Sandbox instance is unreachable')
-    except:
-        pass
-    return (False, 'Wrong thing happends on sandbox instance')
+    def test_user(self):
+        "Check if fluiddb user exists"
+        fdb = Fluid(self.url)
+        try:
+            ret = fdb.__call__('GET', '/users/fluiddb')
+            if ret[0] == 200:
+                return (True,
+                        '%s instance is now reachable' % self.shortname.capitalize(),
+                        ret[1]['id'])
+        except socket.error:
+            return (False, '%s instance is unreachable' % self.shortname.capitalize())
+        except:
+            pass
+        return (False, 'Wrong thing happends on %s instance' % self.shortname)
 
-tests = (
-        ('Test FluidDB user', test_fluiddb_user, 'FluidDB user on main has changed id')
-        ,('Test FluidDB Sandbox user', test_fluiddb_sandbox_user, 'FluidDB user on sandbox has changed id')
-        )
+
+maininstance = FluidDBConnection('main', 'http://fluiddb.fluidinfo.com')
+sandbox = FluidDBConnection('sandbox', 'http://sandbox.fluidinfo.com')
+
+
+tests = [
+    ('Test FluidDB user', maininstance.test_user, 'FluidDB user on main has changed id'),
+    ('Test FluidDB Sandbox user', sandbox.test_user, 'FluidDB user on sandbox has changed id'),
+        ]
 
 def main():
     config = ConfigParser.RawConfigParser()
@@ -104,23 +103,21 @@ def main():
 
     for testname, testfunc, testchangedmsg in tests:
         ret = testfunc()
+        pickleidx = 'laststatus-' + testname
         if ret[0] is False:
+            testresult = 'fail'
             logging.error('%s: fail', testname)
-
-            pickleidx = 'laststatus-' + testname
-            if pickleidx in pickledata and pickledata[pickleidx] != 'fail':
-                twit.PostUpdate(ret[1])
-                logging.info(ret[1])
-            pickledata[pickleidx] = 'fail'
         else:
+            testresult = 'pass'
             logging.info('%s: passed!', testname)
+            
 
-            pickleidx = 'laststatus-' + testname
-            if pickleidx in pickledata and pickledata[pickleidx] != 'pass':
-                twit.PostUpdate(ret[1])
-                logging.info(ret[1])
-            pickledata[pickleidx] = 'pass'
+        if pickleidx in pickledata and pickledata[pickleidx] != testresult:
+            twit.PostUpdate(ret[1])
+            logging.info(ret[1])
+            pickledata[pickleidx] = testresult
 
+        if testresult == 'pass':
             pickleidx = 'change-' + testname 
             if pickleidx in pickledata and pickledata[pickleidx] != ret[2]:
                 message = '%s: %s' % (testchangedmsg, ret[2])
