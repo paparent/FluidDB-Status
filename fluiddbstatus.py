@@ -50,7 +50,7 @@ def is_internet_reachable():
     '''Checks if Google is down'''
     return get_site_status('www.google.com') == 'up'
 
-class  FluidDBConnection(object):
+class FluidDBConnection(object):
     def __init__(self, shortname, url):
         self.shortname = shortname
         self.url = url
